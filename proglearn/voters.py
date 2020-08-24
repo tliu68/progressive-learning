@@ -19,12 +19,12 @@ from keras import layers
 
 
 class TreeClassificationVoter(BaseVoter):
-    def __init__(self, finite_sample_correction=False):
+    def __init__(self, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
         """
         Doc strings here.
         """
 
-        self.finite_sample_correction = finite_sample_correction
+        self.kappa = kappa #correction
         self._is_fitted = False
         self.multilabel = False
 
@@ -51,9 +51,9 @@ class TreeClassificationVoter(BaseVoter):
             ]
             posteriors = np.nan_to_num(np.array(class_counts) / np.sum(class_counts))
 
-            if self.finite_sample_correction:
+            if self.kappa is not None: # corrected from "if self.finite_sample_correction"
                 posteriors = self._finite_sample_correction(
-                    posteriors, len(idxs_in_leaf), len(np.unique(y))
+                    posteriors, len(idxs_in_leaf), kappa) # corrected: len(np.unique(y) to kappa
                 )
 
             self.leaf_to_posterior[leaf_id] = posteriors
@@ -112,11 +112,11 @@ class TreeClassificationVoter(BaseVoter):
 
         return self._is_fitted
 
-    def _finite_sample_correction(posteriors, num_points_in_partition, num_classes):
+    def _finite_sample_correction(posteriors, num_points_in_partition, kappa): #correction: kappa instead of num_classes
         """
         encourage posteriors to approach uniform when there is low data
         """
-        correction_constant = 1 / (num_classes * num_points_in_partition)
+        correction_constant = 1 / (kappa * num_points_in_partition) #correction: using kappa
 
         zero_posterior_idxs = np.where(posteriors == 0)[0]
         posteriors[zero_posterior_idxs] = correction_constant

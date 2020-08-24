@@ -5,13 +5,13 @@ from .deciders import SimpleAverage
 
 
 class LifelongClassificationForest:
-    def __init__(self, n_estimators=100, finite_sample_correction=False):
+    def __init__(self, n_estimators=100, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
         self.n_estimators = n_estimators
         self.pl = ProgressiveLearner(
             default_transformer_class=TreeClassificationTransformer,
             default_transformer_kwargs={},
             default_voter_class=TreeClassificationVoter,
-            default_voter_kwargs={"finite_sample_correction": finite_sample_correction},
+            default_voter_kwargs={"kappa": kappa}, #correction: from "finite_sample_correction": finite_sample_correction to "kappa": kappa)
             default_decider_class=SimpleAverage,
             default_decider_kwargs={},
         )
@@ -36,15 +36,16 @@ class LifelongClassificationForest:
 
 
 class UncertaintyForest:
-    def __init__(self, n_estimators=100, finite_sample_correction=False):
+    def __init__(self, n_estimators=100, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
         self.n_estimators = n_estimators
-        self.finite_sample_correction = finite_sample_correction
+        self.n_estimators = n_estimators
+        self.kappa = kappa #correction: from "self.finite_sample_correction = finite_sample_correction" to "self.kappa = kappa"
 
     def fit(self, X, y):
         self.lf = LifelongClassificationForest(
             n_estimators=self.n_estimators,
-            finite_sample_correction=self.finite_sample_correction,
-        )
+            kappa=self.kappa, 
+        ) #correction: from "finite_sample_correction = self.finite_sample_correction" to "kappa = self.kappa"
         self.lf.add_task(X, y, task_id=0)
         return self
 
