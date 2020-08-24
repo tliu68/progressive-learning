@@ -53,8 +53,8 @@ class TreeClassificationVoter(BaseVoter):
 
             if self.kappa is not None: # corrected from "if self.finite_sample_correction"
                 posteriors = self._finite_sample_correction(
-                    posteriors, len(idxs_in_leaf), kappa) # corrected: len(np.unique(y) to kappa
-                )
+                    posteriors, len(idxs_in_leaf), kappa 
+                ) #correction: len(np.unique(y) to kappa
 
             self.leaf_to_posterior[leaf_id] = posteriors
 
