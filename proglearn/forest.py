@@ -5,7 +5,7 @@ from .deciders import SimpleAverage
 
 
 class LifelongClassificationForest:
-    def __init__(self, n_estimators=100, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
+    def __init__(self, n_estimators=100, kappa = None): #correction: from "finite_sample_correction = False" to "kappa = None"
         self.n_estimators = n_estimators
         self.pl = ProgressiveLearner(
             default_transformer_class=TreeClassificationTransformer,
@@ -36,7 +36,7 @@ class LifelongClassificationForest:
 
 
 class UncertaintyForest:
-    def __init__(self, n_estimators=100, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
+    def __init__(self, n_estimators=100, kappa = None): #correction: from "finite_sample_correction = False" to "kappa = None"
         self.n_estimators = n_estimators
         self.n_estimators = n_estimators
         self.kappa = kappa #correction: from "self.finite_sample_correction = finite_sample_correction" to "self.kappa = kappa"

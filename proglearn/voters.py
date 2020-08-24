@@ -19,7 +19,7 @@ from keras import layers
 
 
 class TreeClassificationVoter(BaseVoter):
-    def __init__(self, kappa = 3): #correction: from "finite_sample_correction = False" to "kappa = 3"
+    def __init__(self, kappa = None): #correction: from "finite_sample_correction = False" to "kappa = None"
         """
         Doc strings here.
         """
@@ -33,7 +33,7 @@ class TreeClassificationVoter(BaseVoter):
         Doc strings here.
         """
         check_classification_targets(y)
-
+        
         if type_of_target(y) == "multilabel-indicator":
             # Fit multilabel binary task.
             self.multilabel = True
@@ -50,11 +50,11 @@ class TreeClassificationVoter(BaseVoter):
                 len(np.where(y[idxs_in_leaf] == y_val)[0]) for y_val in np.unique(y)
             ]
             posteriors = np.nan_to_num(np.array(class_counts) / np.sum(class_counts))
-
+          
             if self.kappa is not None: # corrected from "if self.finite_sample_correction"
                 posteriors = self._finite_sample_correction(
-                    posteriors, len(idxs_in_leaf), kappa 
-                ) #correction: len(np.unique(y) to kappa
+                    posteriors, len(idxs_in_leaf), self.kappa 
+                ) #correction: len(np.unique(y)) to kappa
 
             self.leaf_to_posterior[leaf_id] = posteriors
 
@@ -112,11 +112,11 @@ class TreeClassificationVoter(BaseVoter):
 
         return self._is_fitted
 
-    def _finite_sample_correction(posteriors, num_points_in_partition, kappa): #correction: kappa instead of num_classes
+    def _finite_sample_correction(self, posteriors, num_points_in_partition, kappa): #correction: kappa instead of num_classes
         """
         encourage posteriors to approach uniform when there is low data
         """
-        correction_constant = 1 / (kappa * num_points_in_partition) #correction: using kappa
+        correction_constant = 1 / (kappa * num_points_in_partition) #correction: from num_classes to kappa
 
         zero_posterior_idxs = np.where(posteriors == 0)[0]
         posteriors[zero_posterior_idxs] = correction_constant
