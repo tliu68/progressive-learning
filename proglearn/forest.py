@@ -5,8 +5,10 @@ from .deciders import SimpleAverage
 
 
 class LifelongClassificationForest:
-    def __init__(self, n_estimators=100, kappa = None): #correction: from "finite_sample_correction = False" to "kappa = None"
+    def __init__(self, n_estimators=100, kappa=None, transformer_voter_decider_split=[0.67, 0.33, 0]): #correction: from "finite_sample_correction = False" to "kappa = None", add transformer_voter_decider_split
         self.n_estimators = n_estimators
+        self.transformer_voter_decider_split = transformer_voter_decider_split #correction: can set parameter
+        
         self.pl = ProgressiveLearner(
             default_transformer_class=TreeClassificationTransformer,
             default_transformer_kwargs={},
@@ -17,15 +19,15 @@ class LifelongClassificationForest:
         )
 
     def add_task(
-        self, X, y, task_id=None, transformer_voter_decider_split=[0.67, 0.33, 0]
-    ):
+        self, X, y, task_id=None
+    ): #correction: remove transformer_voter_decider_split=[0.67, 0.33, 0]
         self.pl.add_task(
             X,
             y,
             task_id=task_id,
-            transformer_voter_decider_split=transformer_voter_decider_split,
+            transformer_voter_decider_split=self.transformer_voter_decider_split,
             num_transformers=self.n_estimators,
-        )
+        ) #correction: set transformer_voter_decider_split as self.transformer_voter_decider_split
         return self
 
     def predict(self, X, task_id, transformer_ids=None):
@@ -36,16 +38,17 @@ class LifelongClassificationForest:
 
 
 class UncertaintyForest:
-    def __init__(self, n_estimators=100, kappa = None): #correction: from "finite_sample_correction = False" to "kappa = None"
-        self.n_estimators = n_estimators
+    def __init__(self, n_estimators=100, kappa = None, transformer_voter_decider_split=[0.67, 0.33, 0]): #correction: from "finite_sample_correction = False" to "kappa = None", add transformer_voter_decider_split
         self.n_estimators = n_estimators
         self.kappa = kappa #correction: from "self.finite_sample_correction = finite_sample_correction" to "self.kappa = kappa"
+        self.transformer_voter_decider_split = transformer_voter_decider_split #correction: add transformer_voter_decider_split
 
     def fit(self, X, y):
         self.lf = LifelongClassificationForest(
             n_estimators=self.n_estimators,
             kappa=self.kappa, 
-        ) #correction: from "finite_sample_correction = self.finite_sample_correction" to "kappa = self.kappa"
+            transformer_voter_decider_split = self.transformer_voter_decider_split
+        ) #correction: from "finite_sample_correction = self.finite_sample_correction" to "kappa = self.kappa", add transformer_voter_decider_split
         self.lf.add_task(X, y, task_id=0)
         return self
 
