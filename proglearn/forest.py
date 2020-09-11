@@ -4,8 +4,8 @@ Corresponding Email: levinewill@icloud.com
 '''
 from .progressive_learner import ProgressiveLearner
 from .transformers import TreeClassificationTransformer
-from .voters import TreeClassificationVoter
-from .deciders import SimpleAverage
+from .voters import EmpiricalTreeClassificationVoter, KDETreeClassificationVoter
+from .deciders import SimpleAverage, KDEAverage
 import numpy as np
 
 class LifelongClassificationForest:
@@ -15,7 +15,7 @@ class LifelongClassificationForest:
         self.pl = ProgressiveLearner(
             default_transformer_class=TreeClassificationTransformer,
             default_transformer_kwargs={},
-            default_voter_class=TreeClassificationVoter,
+            default_voter_class=EmpiricalTreeClassificationVoter,
             default_voter_kwargs={"finite_sample_correction": finite_sample_correction},
             default_decider_class=SimpleAverage,
             default_decider_kwargs={},
@@ -49,36 +49,49 @@ class LifelongClassificationForest:
 
     def predict_proba(self, X, task_id):
         return self.pl.predict_proba(X, task_id)
+    
+class LifelongClassificationKDEForest(LifelongClassificationForest):
+    def __init__(self, n_estimators=100, tree_construction_proportion=0.67):
+        self.n_estimators = n_estimators
+        self.tree_construction_proportion=tree_construction_proportion
+        self.pl = ProgressiveLearner(
+            default_transformer_class=TreeClassificationTransformer,
+            default_transformer_kwargs={},
+            default_voter_class=KDETreeClassificationVoter,
+            default_voter_kwargs={},
+            default_decider_class=KDEAverage,
+            default_decider_kwargs={},
+        )
 
 
 class UncertaintyForest:
-	"""
-	A class used to represent an uncertainty forest.
+    """
+    A class used to represent an uncertainty forest.
 
-	Methods
-	---
-	fit(X, y)
-		fits forest to data X with labels y
-	predict(X)
-		predicts class labels given data, X
-	predict_proba(X)
-		predicts posterior probabilities given data, X, of each class label
-	"""
+    Methods
+    ---
+    fit(X, y)
+        fits forest to data X with labels y
+    predict(X)
+        predicts class labels given data, X
+    predict_proba(X)
+        predicts posterior probabilities given data, X, of each class label
+    """
     def __init__(self, n_estimators=100, finite_sample_correction=False):
         self.n_estimators = n_estimators
         self.finite_sample_correction = finite_sample_correction
 
     def fit(self, X, y):
-    	"""
-    	fits data X given class labels y
+        """
+        fits data X given class labels y
 
-    	Attributes
-    	---
-    	X : array of shape [n_samples, n_features]
-    		The data that will be trained on
-    	y : array of shape [n_samples]
-    		The label for cluster membership of the given data
-    	"""
+        Attributes
+        ---
+        X : array of shape [n_samples, n_features]
+            The data that will be trained on
+        y : array of shape [n_samples]
+            The label for cluster membership of the given data
+        """
         self.lf = LifelongClassificationForest(
             n_estimators=self.n_estimators,
             finite_sample_correction=self.finite_sample_correction,
@@ -87,23 +100,41 @@ class UncertaintyForest:
         return self
 
     def predict(self, X):
-    	"""
-    	predicts the class labels given data X
+        """
+        predicts the class labels given data X
 
-    	Attributes
-    	---
-    	X : numpy array (number of examples by number of classes)
-    		The data that will have its class predicted. 
-    	"""
+        Attributes
+        ---
+        X : numpy array (number of examples by number of classes)
+            The data that will have its class predicted. 
+        """
         return self.lf.predict(X, 0)
 
     def predict_proba(self, X):
-    	"""
-    	returns the posterior probabilities of each class for data X
+        """
+        returns the posterior probabilities of each class for data X
 
-    	Attributes
-    	---
-    	X : numpy array (number of examples by number of classes)
-    		The data that will have its posterior probabilities returned
-    	"""
+        Attributes
+        ---
+        X : numpy array (number of examples by number of classes)
+            The data that will have its posterior probabilities returned
+        """
         return self.lf.predict_proba(X, 0)
+    
+class KDEUncertaintyForest:
+    def __init__(self, n_estimators=100):
+        self.n_estimators = n_estimators
+
+    def fit(self, X, y):
+        self.lf = LifelongClassificationKDEForest(
+            n_estimators=self.n_estimators
+        )
+        self.lf.add_task(X, y, task_id=0)
+        return self
+
+    def predict(self, X):
+        return self.lf.predict(X, 0)
+
+    def predict_proba(self, X):
+        return self.lf.predict_proba(X, 0)
+

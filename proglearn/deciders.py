@@ -56,12 +56,8 @@ class SimpleAverage(ClassificationDecider):
             for bag_id in range(
                 len(self.transformer_id_to_transformers[transformer_id])
             ):
-                transformer = self.transformer_id_to_transformers[transformer_id][
-                    bag_id
-                ]
-                X_transformed = transformer.transform(X)
                 voter = self.transformer_id_to_voters[transformer_id][bag_id]
-                vote = voter.vote(X_transformed)
+                vote = voter.vote(X)
                 vote_per_bag_id.append(vote)
             vote_per_transformer_id.append(np.mean(vote_per_bag_id, axis=0))
         return np.mean(vote_per_transformer_id, axis=0)
@@ -69,3 +65,53 @@ class SimpleAverage(ClassificationDecider):
     def predict(self, X, transformer_ids=None):
         vote_overall = self.predict_proba(X, transformer_ids=transformer_ids)
         return self.classes[np.argmax(vote_overall, axis=1)]
+    
+class KDEAverage(ClassificationDecider):
+    """
+    Doc string here.
+    """
+
+    def __init__(self, classes=[]):
+        self.classes = classes
+
+    def fit(
+        self,
+        X,
+        y,
+        transformer_id_to_transformers,
+        transformer_id_to_voters,
+        classes=None,
+    ):
+        if not isinstance(self.classes, (list, np.ndarray)):
+            if len(y) == 0:
+                raise ValueError("Classification Decider classes undefined with no class labels fed to fit")
+            else:
+                self.classes = np.unique(y)
+        else:
+            self.classes = np.array(self.classes)
+        self.transformer_id_to_transformers = transformer_id_to_transformers
+        self.transformer_id_to_voters = transformer_id_to_voters
+        return self
+
+    def predict_proba(self, X, transformer_ids=None):
+        vote_per_transformer_id = []
+        for transformer_id in (
+            transformer_ids
+            if transformer_ids is not None
+            else self.transformer_id_to_voters.keys()
+        ):
+            vote_per_bag_id = []
+            for bag_id in range(
+                len(self.transformer_id_to_transformers[transformer_id])
+            ):
+                voter = self.transformer_id_to_voters[transformer_id][bag_id]
+                vote = voter.vote(X)
+                vote_per_bag_id.append(vote)
+            vote_per_transformer_id.append(np.mean(vote_per_bag_id, axis=0))
+        return np.mean(vote_per_transformer_id, axis=0)
+
+    def predict(self, X, transformer_ids=None):
+        vote_overall = self.predict_proba(X, transformer_ids=transformer_ids)
+        return self.classes[np.argmax(vote_overall, axis=1)]
+
+

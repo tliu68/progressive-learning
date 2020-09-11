@@ -268,7 +268,7 @@ class ProgressiveLearner(ClassificationProgressiveLearner):
                 transformer_id,
                 task_id,
                 voter_class(**voter_kwargs).fit(
-                    transformer.transform(X[voter_data_idx]), y[voter_data_idx]
+                    X[voter_data_idx], y[voter_data_idx], transformer
                 ),
             )
 
@@ -578,3 +578,4 @@ class ProgressiveLearner(ClassificationProgressiveLearner):
             raise AttributeError(
                 "Cannot call `predict_proba` on non-classification decider."
             )
+
