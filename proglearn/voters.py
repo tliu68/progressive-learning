@@ -104,7 +104,7 @@ class EmpiricalTreeClassificationVoter(BaseVoter):
         return posteriors
     
 class KDETreeClassificationVoter(BaseVoter):
-    def __init__(self, finite_sample_correction=False):
+    def __init__(self):
         """
         Doc strings here.
         """
